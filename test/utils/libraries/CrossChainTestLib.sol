@@ -330,7 +330,7 @@ library CrossChainTestLib {
                 escrowDetails.allowMultipleFills,
                 InteractionParams("", "", gettersAmountData, gettersAmountData, "", "", "", postInteractionData),
                 "",
-                19
+                uint40(block.timestamp)
             );
         }
 

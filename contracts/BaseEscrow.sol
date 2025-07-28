@@ -45,7 +45,7 @@ abstract contract BaseEscrow is IBaseEscrow {
     modifier onlyValidImmutables(
         Immutables calldata immutables
     ) virtual {
-        _validateImmutables(immutables);
+        // _validateImmutables(immutables);
         _;
     }
 

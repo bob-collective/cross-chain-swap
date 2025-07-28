@@ -55,6 +55,12 @@ library TimelocksLib {
         return Timelocks.wrap((Timelocks.unwrap(timelocks) & ~uint256(_DEPLOYED_AT_MASK)) | value << _DEPLOYED_AT_OFFSET);
     }
 
+    function getDeployedAt(
+        Timelocks timelocks
+    ) internal pure returns (uint256) {
+        return Timelocks.unwrap(timelocks) >> _DEPLOYED_AT_OFFSET;
+    }
+
     /**
      * @notice Returns the start of the rescue period.
      * @param timelocks The timelocks to get the rescue delay from.
@@ -77,5 +83,17 @@ library TimelocksLib {
         uint256 bitShift = uint256(stage) * 32;
         // The maximum uint32 value will be reached in 2106.
         return (data >> _DEPLOYED_AT_OFFSET) + uint32(data >> bitShift);
+    }
+
+    function encoded(
+        Timelocks timelocks
+    ) internal pure returns (bytes memory) {
+        return abi.encodePacked(timelocks);
+    }
+
+    function toUint256(
+        Timelocks timelocks
+    ) internal pure returns (uint256) {
+        return Timelocks.unwrap(timelocks);
     }
 }

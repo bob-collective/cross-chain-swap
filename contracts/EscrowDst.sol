@@ -24,6 +24,8 @@ contract EscrowDst is Escrow, IEscrowDst {
     using AddressLib for Address;
     using TimelocksLib for Timelocks;
 
+    error InvalidInteraction();
+
     constructor(uint32 rescueDelay, IERC20 accessToken) BaseEscrow(rescueDelay, accessToken) { }
 
     /**
@@ -67,7 +69,7 @@ contract EscrowDst is Escrow, IEscrowDst {
     )
         external
         onlyTaker(immutables)
-        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstPublicWithdrawal))
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstWithdrawal))
         onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.DstCancellation))
     {
         _withdrawWithInteraction(secret, immutables, interaction);
@@ -108,7 +110,7 @@ contract EscrowDst is Escrow, IEscrowDst {
         bytes32 secret,
         Immutables calldata immutables,
         bytes memory interaction
-    ) internal onlyValidImmutables(immutables) onlyValidSecret(secret, immutables) {
+    ) internal onlyValidImmutables(immutables) onlyValidSecret(secret, immutables) onlyValidInteraction(interaction, immutables) {
         Call[] memory calls = abi.decode(interaction, (Call[]));
         _attemptCalls(calls);
         _ethTransfer(msg.sender, immutables.safetyDeposit);
@@ -130,5 +132,12 @@ contract EscrowDst is Escrow, IEscrowDst {
             (bool success,) = call.target.call{ value: call.value }(call.callData);
             if (!success) revert CallReverted(i, calls);
         }
+    }
+
+    modifier onlyValidInteraction(bytes memory interaction, Immutables calldata immutables) {
+        if (keccak256(interaction) != immutables.dstInteractionHash) {
+            revert InvalidInteraction();
+        }
+        _;
     }
 }

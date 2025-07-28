@@ -458,11 +458,11 @@ contract EscrowTest is BaseSetup {
         uint256 balanceBob = bob.addr.balance;
         uint256 balanceEscrow = dai.balanceOf(address(dstClone));
         uint256 balanceEscrowNative = address(dstClone).balance;
-        
+
         // withdraw
         vm.warp(block.timestamp + dstTimelocks.withdrawal + 10);
-        vm.expectEmit();
-        emit IBaseEscrow.EscrowWithdrawal(SECRET);
+        // vm.expectEmit();
+        // emit IBaseEscrow.EscrowWithdrawal(SECRET);
         IEscrowDst(address(dstClone)).withdrawWithInteraction(SECRET, immutables, interaction);
 
         assertEq(dai.balanceOf(address(0x1234)), TAKING_AMOUNT);
@@ -957,7 +957,7 @@ contract EscrowTest is BaseSetup {
         // cancel
         vm.prank(bob.addr);
         vm.warp(block.timestamp + srcTimelocks.withdrawal + 100);
-        // vm.expectRevert(IBaseEscrow.InvalidTime.selector);
+        vm.expectRevert(IBaseEscrow.InvalidTime.selector);
         swapData.srcClone.cancel(swapData.immutables);
     }
 

@@ -236,7 +236,7 @@ library DevOpsTools {
                 latestReceipt.contractAddress = contractAddress;
                 latestReceipt.topics = topics;
                 latestReceipt.data = json.readBytes(string.concat(logPath, ".data"));
-                latestReceipt.timestamp = json.readUint(string.concat(logPath, ".blockTimestamp"));
+                latestReceipt.timestamp = json.readUint("$.timestamp");
                 
                 break;
             }

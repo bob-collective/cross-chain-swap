@@ -10,7 +10,6 @@ import { IEscrowFactory } from "contracts/interfaces/IEscrowFactory.sol";
 import { IResolverExample } from "contracts/interfaces/IResolverExample.sol";
 import { Timelocks, TimelocksLib } from "contracts/libraries/TimelocksLib.sol";
 
-
 contract CancelSrc is Script {
     function run() external {
         address deployer = vm.envAddress("DEPLOYER_ADDRESS");
@@ -36,7 +35,8 @@ contract CancelSrc is Script {
             token: Address.wrap(uint160(srcToken)),
             hashlock: hashlock,
             safetyDeposit: safetyDeposit,
-            timelocks: timelocks
+            timelocks: timelocks,
+            dstInteractionHash: bytes32(0)
         });
 
         // address escrow = vm.envAddress("ESCROW_SRC");

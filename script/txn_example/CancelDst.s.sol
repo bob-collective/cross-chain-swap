@@ -33,7 +33,8 @@ contract CancelDst is Script {
             token: Address.wrap(uint160(dstToken)),
             hashlock: hashlock,
             safetyDeposit: safetyDeposit,
-            timelocks: timelocks
+            timelocks: timelocks,
+            dstInteractionHash: bytes32(0)
         });
 
         address escrow = vm.envAddress("ESCROW_DST");

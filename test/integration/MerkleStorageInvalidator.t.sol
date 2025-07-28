@@ -502,9 +502,8 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         );
 
         assertEq(usdc.balanceOf(address(srcClone2)), makingAmount2);
-        (uint256 storedIndex,) = IMerkleStorageInvalidator(escrowFactory).lastValidated(
-            keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root))))
-        );
+        (uint256 storedIndex,) =
+            IMerkleStorageInvalidator(escrowFactory).lastValidated(keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root)))));
         assertEq(storedIndex, idx + 1);
     }
 
@@ -584,7 +583,6 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         (bool success,) = srcClone.call{ value: SRC_SAFETY_DEPOSIT }("");
         assertEq(success, true);
 
-
         vm.prank(bob.addr);
         limitOrderProtocol.fillOrderArgs(
             swapData.order,
@@ -637,9 +635,8 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         );
 
         assertEq(usdc.balanceOf(address(srcClone2)), makingAmount2);
-        (uint256 storedIndex,) = IMerkleStorageInvalidator(escrowFactory).lastValidated(
-            keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root))))
-        );
+        (uint256 storedIndex,) =
+            IMerkleStorageInvalidator(escrowFactory).lastValidated(keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root)))));
         assertEq(storedIndex, PARTS_AMOUNT + 1);
     }
 
@@ -674,7 +671,6 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         (bool success,) = srcClone.call{ value: SRC_SAFETY_DEPOSIT }("");
         assertEq(success, true);
 
-
         vm.prank(bob.addr);
         limitOrderProtocol.fillOrderArgs(
             swapData.order,
@@ -727,9 +723,8 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         );
 
         assertEq(usdc.balanceOf(address(srcClone2)), makingAmount2);
-        (uint256 storedIndex,) = IMerkleStorageInvalidator(escrowFactory).lastValidated(
-            keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root))))
-        );
+        (uint256 storedIndex,) =
+            IMerkleStorageInvalidator(escrowFactory).lastValidated(keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root)))));
         assertEq(storedIndex, PARTS_AMOUNT + 1);
     }
 
@@ -765,7 +760,6 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         (bool success,) = srcClone.call{ value: SRC_SAFETY_DEPOSIT }("");
         assertEq(success, true);
 
-
         vm.prank(bob.addr);
         limitOrderProtocol.fillOrderArgs(
             swapData.order,
@@ -777,9 +771,8 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         );
 
         assertEq(usdc.balanceOf(srcClone), makingAmount);
-        (uint256 storedIndex,) = IMerkleStorageInvalidator(escrowFactory).lastValidated(
-            keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root))))
-        );
+        (uint256 storedIndex,) =
+            IMerkleStorageInvalidator(escrowFactory).lastValidated(keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root)))));
         assertEq(storedIndex, PARTS_AMOUNT);
 
         // ------------ 2nd fill ------------ //
@@ -821,9 +814,8 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         );
 
         assertEq(usdc.balanceOf(address(srcClone2)), makingAmount2);
-        (storedIndex,) = IMerkleStorageInvalidator(escrowFactory).lastValidated(
-            keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root))))
-        );
+        (storedIndex,) =
+            IMerkleStorageInvalidator(escrowFactory).lastValidated(keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root)))));
         assertEq(storedIndex, SECRETS_AMOUNT);
     }
 
@@ -845,7 +837,7 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         rootPlusAmount = bytes32(secretsAmount << 240 | uint240(uint256(root)));
 
         CrossChainTestLib.SwapData memory swapData = _prepareDataSrcCustom(
-            rootPlusAmount, makingAmount, TAKING_AMOUNT, SRC_SAFETY_DEPOSIT, DST_SAFETY_DEPOSIT, address(0), false, true
+            rootPlusAmount, makingAmount, TAKING_AMOUNT, SRC_SAFETY_DEPOSIT, DST_SAFETY_DEPOSIT, address(0), false, true, hex"1234"
         );
 
         swapData.immutables.hashlock = hashedS[idx];
@@ -919,7 +911,6 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         (bool success,) = srcClone.call{ value: SRC_SAFETY_DEPOSIT }("");
         assertEq(success, true);
 
-
         vm.prank(bob.addr);
         limitOrderProtocol.fillOrderArgs(
             swapData.order,
@@ -931,9 +922,8 @@ contract MerkleStorageInvalidatorIntTest is BaseSetup {
         );
 
         assertEq(usdc.balanceOf(srcClone), makingAmount);
-        (uint256 storedIndex,) = IMerkleStorageInvalidator(escrowFactory).lastValidated(
-            keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root))))
-        );
+        (uint256 storedIndex,) =
+            IMerkleStorageInvalidator(escrowFactory).lastValidated(keccak256(abi.encodePacked(swapData.orderHash, uint240(uint256(root)))));
         assertEq(storedIndex, idx + 1);
 
         // ------------ 2nd fill, forged proof ------------ //

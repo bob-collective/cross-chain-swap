@@ -95,7 +95,8 @@ abstract contract BaseEscrowFactory is IEscrowFactory, ResolverValidationExtensi
             token: order.makerAsset,
             amount: makingAmount,
             safetyDeposit: extraDataArgs.deposits >> 128,
-            timelocks: extraDataArgs.timelocks.setDeployedAt(block.timestamp)
+            timelocks: extraDataArgs.timelocks.setDeployedAt(block.timestamp),
+            dstInteractionHash: extraDataArgs.dstInteractionHash
         });
 
         DstImmutablesComplement memory immutablesComplement = DstImmutablesComplement({
@@ -143,14 +144,18 @@ abstract contract BaseEscrowFactory is IEscrowFactory, ResolverValidationExtensi
     /**
      * @notice See {IEscrowFactory-addressOfEscrowSrc}.
      */
-    function addressOfEscrowSrc(IBaseEscrow.Immutables calldata immutables) external view virtual returns (address) {
+    function addressOfEscrowSrc(
+        IBaseEscrow.Immutables calldata immutables
+    ) external view virtual returns (address) {
         return Create2.computeAddress(immutables.hash(), _PROXY_SRC_BYTECODE_HASH);
     }
 
     /**
      * @notice See {IEscrowFactory-addressOfEscrowDst}.
      */
-    function addressOfEscrowDst(IBaseEscrow.Immutables calldata immutables) external view virtual returns (address) {
+    function addressOfEscrowDst(
+        IBaseEscrow.Immutables calldata immutables
+    ) external view virtual returns (address) {
         return Create2.computeAddress(immutables.hash(), _PROXY_DST_BYTECODE_HASH);
     }
 

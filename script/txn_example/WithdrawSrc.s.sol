@@ -35,7 +35,8 @@ contract WithdrawSrc is Script {
             token: Address.wrap(uint160(srcToken)),
             hashlock: hashlock,
             safetyDeposit: safetyDeposit,
-            timelocks: timelocks
+            timelocks: timelocks,
+            dstInteractionHash: bytes32(0)
         });
 
         // address escrow = vm.envAddress("ESCROW_SRC");

@@ -47,12 +47,11 @@ contract ResolverExample is IResolverExample, Ownable {
     function deploySrc(
         IBaseEscrow.Immutables calldata immutables,
         IOrderMixin.Order calldata order,
-        bytes32 r,
-        bytes32 vs,
+        bytes calldata signature,
         uint256 amount,
         TakerTraits takerTraits,
         bytes calldata args
-    ) external onlyOwner {
+    ) external {
         IBaseEscrow.Immutables memory immutablesMem = immutables;
         immutablesMem.timelocks = TimelocksLib.setDeployedAt(immutables.timelocks, block.timestamp);
         address computed = _FACTORY.addressOfEscrowSrc(immutablesMem);
@@ -62,7 +61,8 @@ contract ResolverExample is IResolverExample, Ownable {
         // _ARGS_HAS_TARGET = 1 << 251
         takerTraits = TakerTraits.wrap(TakerTraits.unwrap(takerTraits) | uint256(1 << 251));
         bytes memory argsMem = abi.encodePacked(computed, args);
-        _LOP.fillOrderArgs(order, r, vs, amount, takerTraits, argsMem);
+        // _LOP.fillOrderArgs(order, r, vs, amount, takerTraits, argsMem);
+        _LOP.fillContractOrderArgs(order, signature, amount, takerTraits, argsMem);
     }
 
     /**

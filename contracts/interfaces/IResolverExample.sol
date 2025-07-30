@@ -24,6 +24,16 @@ interface IResolverExample {
         bytes calldata args
     ) external;
 
+    function deploySrc(
+        IBaseEscrow.Immutables calldata immutables,
+        IOrderMixin.Order calldata order,
+        bytes32 r,
+        bytes32 vs,
+        uint256 amount,
+        TakerTraits takerTraits,
+        bytes calldata args
+    ) external;
+
     /**
      * @notice Deploys a new escrow contract for taker on the destination chain.
      * @param dstImmutables The immutables of the escrow contract that are used in deployment.

@@ -6,17 +6,22 @@ import { Script } from "forge-std/Script.sol";
 import { EscrowFactory } from "contracts/EscrowFactory.sol";
 import { TokenMock } from "solidity-utils/contracts/mocks/TokenMock.sol";
 
+import { LimitOrderProtocol } from "limit-order-protocol/contracts/LimitOrderProtocol.sol";
+import "@1inch/solidity-utils/contracts/interfaces/IWETH.sol";
+
 contract DeployEscrowFactoryBob is Script {
     uint32 public constant RESCUE_DELAY = 691200; // 8 days
-    address public constant LOP = 0x073622341e21CBEf798DE6af07A6C94d305c6002; // Bob Sepolia
-    address public constant ACCESS_TOKEN = 0xbcB21d7114693A435b466197EB6d5da2909b759e; // Bob Sepolia
-    address public constant FEE_TOKEN = 0xAB0127f49f8c86E007407308405ed03bD1475f6E; // Bob Sepolia
+    address public constant LOP = 0xAa9D5EED4df7a82f7De958e416d8487FD0EaE09b;
+    address public constant ACCESS_TOKEN = 0xECE5F6b61A3d3D69e142DAd93975630210e77Df4; 
+    address public constant FEE_TOKEN = 0x4A4fE8B304B89c0c179677672a55d49F941140D9; 
 
     function run() external {
         uint256 deployerPK = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address deployer = vm.envAddress("DEPLOYER_ADDRESS");
         address feeBankOwner = deployer;
         vm.startBroadcast(deployerPK);
+
+        // LimitOrderProtocol limitOrderProtocol = new LimitOrderProtocol(IWETH(0x4200000000000000000000000000000000000006));
 
         new EscrowFactory(LOP, TokenMock(FEE_TOKEN), TokenMock(ACCESS_TOKEN), feeBankOwner, RESCUE_DELAY, RESCUE_DELAY);
 

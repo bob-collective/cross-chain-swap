@@ -65,10 +65,31 @@ contract ResolverExample is IResolverExample, Ownable {
         _LOP.fillContractOrderArgs(order, signature, amount, takerTraits, argsMem);
     }
 
+    function deploySrc(
+        IBaseEscrow.Immutables calldata immutables,
+        IOrderMixin.Order calldata order,
+        bytes32 r,
+        bytes32 vs,
+        uint256 amount,
+        TakerTraits takerTraits,
+        bytes calldata args
+    ) external onlyOwner {
+        IBaseEscrow.Immutables memory immutablesMem = immutables;
+        immutablesMem.timelocks = TimelocksLib.setDeployedAt(immutables.timelocks, block.timestamp);
+        address computed = _FACTORY.addressOfEscrowSrc(immutablesMem);
+        (bool success,) = address(computed).call{ value: immutablesMem.safetyDeposit }("");
+        if (!success) revert IBaseEscrow.NativeTokenSendingFailure();
+
+        // _ARGS_HAS_TARGET = 1 << 251
+        takerTraits = TakerTraits.wrap(TakerTraits.unwrap(takerTraits) | uint256(1 << 251));
+        bytes memory argsMem = abi.encodePacked(computed, args);
+        _LOP.fillOrderArgs(order, r, vs, amount, takerTraits, argsMem);
+    }
+
     /**
      * @notice See {IResolverExample-deployDst}.
      */
-    function deployDst(IBaseEscrow.Immutables calldata dstImmutables, uint256 srcCancellationTimestamp) external payable onlyOwner {
+    function deployDst(IBaseEscrow.Immutables calldata dstImmutables, uint256 srcCancellationTimestamp) external payable {
         _FACTORY.createDstEscrow{ value: msg.value }(dstImmutables, srcCancellationTimestamp);
     }
 

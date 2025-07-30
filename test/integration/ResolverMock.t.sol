@@ -56,7 +56,7 @@ contract IntegrationResolverMockTest is BaseSetup {
         assertEq(usdc.balanceOf(address(swapData.srcClone)), 0);
         assertEq(address(swapData.srcClone).balance, 0);
 
-        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, r, vs, MAKING_AMOUNT, takerTraits, args);
+        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, "", MAKING_AMOUNT, takerTraits, args);
 
         assertEq(usdc.balanceOf(address(swapData.srcClone)), MAKING_AMOUNT);
         assertEq(address(swapData.srcClone).balance, SRC_SAFETY_DEPOSIT);
@@ -80,7 +80,7 @@ contract IntegrationResolverMockTest is BaseSetup {
         );
 
         // deploy escrow
-        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, r, vs, MAKING_AMOUNT, takerTraits, args);
+        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, "", MAKING_AMOUNT, takerTraits, args);
 
         uint256 aliceBalance = usdc.balanceOf(alice.addr);
         uint256 resolverBalanceNative = resolverMock.balance;
@@ -120,7 +120,7 @@ contract IntegrationResolverMockTest is BaseSetup {
         );
 
         // deploy escrow
-        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, r, vs, MAKING_AMOUNT, takerTraits, args);
+        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, "", MAKING_AMOUNT, takerTraits, args);
 
         uint256 aliceBalance = usdc.balanceOf(alice.addr);
         uint256 resolverBalanceNative = resolverMock.balance;
@@ -221,7 +221,7 @@ contract IntegrationResolverMockTest is BaseSetup {
         );
 
         // deploy escrow
-        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, r, vs, MAKING_AMOUNT, takerTraits, args);
+        IResolverExample(resolverMock).deploySrc(swapData.immutables, swapData.order, "", MAKING_AMOUNT, takerTraits, args);
 
         uint256 resolverBalance = usdc.balanceOf(resolverMock);
         uint256 resolverBalanceNative = resolverMock.balance;

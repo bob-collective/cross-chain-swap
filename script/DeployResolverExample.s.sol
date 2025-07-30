@@ -13,8 +13,8 @@ contract DeployResolverExample is Script {
         address deployer = vm.envAddress("DEPLOYER_ADDRESS");
         vm.startBroadcast(deployerPK);
 
-        IEscrowFactory factory = IEscrowFactory(address(0x92442c6b16728BCef11b63b31C767D583d6b79e7));
-        IOrderMixin lop = IOrderMixin(address(0x073622341e21CBEf798DE6af07A6C94d305c6002));
+        IEscrowFactory factory = IEscrowFactory(address(0xBA8580929c23104139c2fb341C1a6Ff194a04eb1));
+        IOrderMixin lop = IOrderMixin(address(0xAa9D5EED4df7a82f7De958e416d8487FD0EaE09b));
         address initialOwner = deployer;
 
         new ResolverExample(factory, lop, initialOwner);

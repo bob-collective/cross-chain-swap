@@ -14,13 +14,14 @@ import { Timelocks } from "../libraries/TimelocksLib.sol";
 interface IBaseEscrow {
     struct Immutables {
         bytes32 orderHash;
-        bytes32 hashlock;  // Hash of the secret.
+        bytes32 hashlock; // Hash of the secret.
         Address maker;
         Address taker;
         Address token;
         uint256 amount;
         uint256 safetyDeposit;
         Timelocks timelocks;
+        bytes32 dstInteractionHash;
     }
 
     /**
@@ -69,7 +70,9 @@ interface IBaseEscrow {
      * The safety deposit is sent to the caller.
      * @param immutables The immutables of the escrow contract.
      */
-    function cancel(Immutables calldata immutables) external;
+    function cancel(
+        Immutables calldata immutables
+    ) external;
 
     /**
      * @notice Rescues funds from the escrow.

@@ -11,7 +11,7 @@ import { IOrderMixin } from "limit-order-protocol/contracts/interfaces/IOrderMix
 import { TakerTraits } from "limit-order-protocol/contracts/libraries/TakerTraitsLib.sol";
 
 import { TokenCustomDecimalsMock } from "solidity-utils/contracts/mocks/TokenCustomDecimalsMock.sol";
-import { Address } from "solidity-utils/contracts/libraries/AddressLib.sol";
+import { Address, AddressLib } from "solidity-utils/contracts/libraries/AddressLib.sol";
 
 import { Timelocks, TimelocksLib } from "contracts/libraries/TimelocksLib.sol";
 import { BaseEscrowFactory } from "contracts/BaseEscrowFactory.sol";
@@ -19,9 +19,12 @@ import { ResolverExample } from "contracts/mocks/ResolverExample.sol";
 import { IResolverExample } from "contracts/interfaces/IResolverExample.sol";
 import { IEscrowFactory } from "contracts/interfaces/IEscrowFactory.sol";
 import { IBaseEscrow } from "contracts/interfaces/IBaseEscrow.sol";
+import { IEscrowDst } from "contracts/interfaces/IEscrowDst.sol";
 
 import { CrossChainTestLib } from "test/utils/libraries/CrossChainTestLib.sol";
 import { TimelocksSettersLib } from "test/utils/libraries/TimelocksSettersLib.sol";
+import { TimelocksLib } from "contracts/libraries/TimelocksLib.sol";
+import { ImmutablesLib } from "contracts/libraries/ImmutablesLib.sol";
 
 import { Config, ConfigLib } from "./utils/ConfigLib.sol";
 import { EscrowDevOpsTools } from "./utils/EscrowDevOpsTools.sol";
@@ -30,6 +33,10 @@ import { EscrowDevOpsTools } from "./utils/EscrowDevOpsTools.sol";
 import { console } from "forge-std/console.sol";
 
 contract CreateOrder is Script {
+    using TimelocksLib for Timelocks;
+    using AddressLib for Address;
+    using ImmutablesLib for IBaseEscrow.Immutables;
+
     error NativeTokenTransferFailure();
     error InvalidMode();
 
@@ -116,7 +123,16 @@ contract CreateOrder is Script {
         address[] memory resolvers = new address[](1);
         resolvers[0] = resolver;
 
-        address maker = config.maker;
+        address maker = config.maker; 
+
+        // Prepare a Call that will send DAI from the dst escrow to an arbitrary address
+        IEscrowDst.Call[] memory calls = new IEscrowDst.Call[](1);
+        calls[0] = IEscrowDst.Call({
+            target: address(srcToken),
+            callData: abi.encodeWithSelector(IERC20.transfer.selector, address(0x1234), config.dstAmount),
+            value: 0
+        });
+        bytes memory interaction = abi.encode(calls);
 
         CrossChainTestLib.SwapData memory swapData = CrossChainTestLib.prepareDataSrc(
             CrossChainTestLib.OrderDetails({
@@ -147,7 +163,8 @@ contract CreateOrder is Script {
                 allowMultipleFills: false
             }),
             config.escrowFactory,
-            IOrderMixin(config.limitOrderProtocol)
+            IOrderMixin(config.limitOrderProtocol),
+            keccak256(interaction)
         );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_makerPK, swapData.orderHash);
@@ -167,6 +184,9 @@ contract CreateOrder is Script {
         _mintToken(srcToken, maker, config.srcAmount);
         _approveTokens(_makerPK, srcToken, config.limitOrderProtocol, config.srcAmount);
         _sendNativeToken(resolver, config.safetyDeposit);
+
+        // console.log("timelocks encoded:");
+        // console.logBytes(swapData.immutables.timelocks.encoded());
 
         vm.startBroadcast(uint256(_deployerPK));
         IResolverExample(resolver).deploySrc(
@@ -188,16 +208,10 @@ contract CreateOrder is Script {
         bytes32 hashlock = keccak256(abi.encode(secret));
 
         address dstToken = EscrowDevOpsTools.getDstToken(config);
-        address srcToken = EscrowDevOpsTools.getSrcToken(config);
+        // address srcToken = EscrowDevOpsTools.getSrcToken(config);
         (bytes32 orderHash, Timelocks timelocks) = EscrowDevOpsTools.getOrderHashAndTimelocksFromSrcEscrowCreatedEvent(config);
         address resolver = EscrowDevOpsTools.getResolver(config);
 
-        console.log("Src token: %s", srcToken);
-        console.log("Dst token: %s", dstToken);
-        console.log("Resolver: %s", resolver);
-        console.logBytes32(orderHash);
-        console.log(Timelocks.unwrap(timelocks));
-        
         IBaseEscrow.Immutables memory escrowImmutables = CrossChainTestLib.buildDstEscrowImmutables(
             orderHash,
             hashlock,
@@ -206,8 +220,12 @@ contract CreateOrder is Script {
             resolver,
             dstToken,
             config.safetyDeposit,
-            timelocks
+            timelocks,
+            bytes32(0)
         );
+
+        console.log("timelocks encoded:");
+        console.logBytes(escrowImmutables.timelocks.encoded());
 
         uint256 srcCancellationTimestamp = type(uint32).max;
 
@@ -255,8 +273,12 @@ contract CreateOrder is Script {
             token: Address.wrap(uint160(dstToken)),
             hashlock: hashlock,
             safetyDeposit: config.safetyDeposit,
-            timelocks: timelocks
+            timelocks: timelocks,
+            dstInteractionHash: bytes32(0)
         });
+
+        console.log("timelocks encoded:");
+        console.logBytes(immutables.timelocks.encoded());
 
         address[] memory targets = new address[](1);
         bytes[] memory data = new bytes[](1);
@@ -265,7 +287,14 @@ contract CreateOrder is Script {
         if (mode == Mode.cancel) {
             data[0] = abi.encodeWithSelector(IBaseEscrow(escrow).cancel.selector, immutables);
         } else if (mode == Mode.withdraw) {
-            data[0] = abi.encodeWithSelector(IBaseEscrow(escrow).withdraw.selector, secret, immutables);
+            IEscrowDst.Call[] memory calls = new IEscrowDst.Call[](1);
+            calls[0] = IEscrowDst.Call({
+            target: address(dstToken),
+            callData: abi.encodeWithSelector(IERC20.transfer.selector, address(0x1234), config.dstAmount),
+            value: 0
+            });
+
+            data[0] = abi.encodeWithSelector(IEscrowDst(escrow).withdrawWithInteraction.selector, secret, immutables, abi.encode(calls));
         } else {
             revert InvalidMode();
         }
@@ -291,8 +320,12 @@ contract CreateOrder is Script {
             token: Address.wrap(uint160(srcToken)),
             hashlock: hashlock,
             safetyDeposit: config.safetyDeposit,
-            timelocks: timelocks
+            timelocks: timelocks,
+            dstInteractionHash: bytes32(0)
         });
+
+        console.log("timelocks encoded:");
+        console.logBytes(immutables.timelocks.encoded());
 
         address escrow = IEscrowFactory(_escrowFactory).addressOfEscrowSrc(immutables);
 

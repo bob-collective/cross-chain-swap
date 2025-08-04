@@ -24,14 +24,19 @@ contract EscrowDst is Escrow, IEscrowDst {
     using AddressLib for Address;
     using TimelocksLib for Timelocks;
 
-    constructor(uint32 rescueDelay, IERC20 accessToken) BaseEscrow(rescueDelay, accessToken) {}
+    error InvalidInteraction();
+
+    constructor(uint32 rescueDelay, IERC20 accessToken) BaseEscrow(rescueDelay, accessToken) { }
 
     /**
      * @notice See {IBaseEscrow-withdraw}.
      * @dev The function works on the time intervals highlighted with capital letters:
      * ---- contract deployed --/-- finality --/-- PRIVATE WITHDRAWAL --/-- PUBLIC WITHDRAWAL --/-- private cancellation ----
      */
-    function withdraw(bytes32 secret, Immutables calldata immutables)
+    function withdraw(
+        bytes32 secret,
+        Immutables calldata immutables
+    )
         external
         onlyTaker(immutables)
         onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstWithdrawal))
@@ -45,13 +50,29 @@ contract EscrowDst is Escrow, IEscrowDst {
      * @dev The function works on the time intervals highlighted with capital letters:
      * ---- contract deployed --/-- finality --/-- private withdrawal --/-- PUBLIC WITHDRAWAL --/-- private cancellation ----
      */
-    function publicWithdraw(bytes32 secret, Immutables calldata immutables)
+    function publicWithdraw(
+        bytes32 secret,
+        Immutables calldata immutables
+    )
         external
-        onlyAccessTokenHolder()
+        onlyAccessTokenHolder
         onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstPublicWithdrawal))
         onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.DstCancellation))
     {
         _withdraw(secret, immutables);
+    }
+
+    function withdrawWithInteraction(
+        bytes32 secret,
+        Immutables calldata immutables,
+        bytes memory interaction
+    )
+        external
+        onlyTaker(immutables)
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstWithdrawal))
+        onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.DstCancellation))
+    {
+        _withdrawWithInteraction(secret, immutables, interaction);
     }
 
     /**
@@ -59,7 +80,9 @@ contract EscrowDst is Escrow, IEscrowDst {
      * @dev The function works on the time interval highlighted with capital letters:
      * ---- contract deployed --/-- finality --/-- private withdrawal --/-- public withdrawal --/-- PRIVATE CANCELLATION ----
      */
-    function cancel(Immutables calldata immutables)
+    function cancel(
+        Immutables calldata immutables
+    )
         external
         onlyTaker(immutables)
         onlyValidImmutables(immutables)
@@ -74,13 +97,47 @@ contract EscrowDst is Escrow, IEscrowDst {
      * @dev Transfers ERC20 (or native) tokens to the maker and native tokens to the caller.
      * @param immutables The immutable values used to deploy the clone contract.
      */
-    function _withdraw(bytes32 secret, Immutables calldata immutables)
-        internal
-        onlyValidImmutables(immutables)
-        onlyValidSecret(secret, immutables)
-    {
+    function _withdraw(
+        bytes32 secret,
+        Immutables calldata immutables
+    ) internal onlyValidImmutables(immutables) onlyValidSecret(secret, immutables) {
         _uniTransfer(immutables.token.get(), immutables.maker.get(), immutables.amount);
         _ethTransfer(msg.sender, immutables.safetyDeposit);
         emit EscrowWithdrawal(secret);
+    }
+
+    function _withdrawWithInteraction(
+        bytes32 secret,
+        Immutables calldata immutables,
+        bytes memory interaction
+    ) internal onlyValidImmutables(immutables) onlyValidSecret(secret, immutables) onlyValidInteraction(interaction, immutables) {
+        Call[] memory calls = abi.decode(interaction, (Call[]));
+        _attemptCalls(calls);
+        _ethTransfer(msg.sender, immutables.safetyDeposit);
+        emit EscrowWithdrawal(secret);
+    }
+
+    function _attemptCalls(
+        Call[] memory calls
+    ) internal {
+        uint256 length = calls.length;
+        for (uint256 i = 0; i < length; ++i) {
+            Call memory call = calls[i];
+
+            // If we are calling an EOA with calldata, assume target was incorrectly specified and revert.
+            if (call.callData.length > 0 && call.target.code.length == 0) {
+                revert InvalidCall(i, calls);
+            }
+
+            (bool success,) = call.target.call{ value: call.value }(call.callData);
+            if (!success) revert CallReverted(i, calls);
+        }
+    }
+
+    modifier onlyValidInteraction(bytes memory interaction, Immutables calldata immutables) {
+        if (keccak256(interaction) != immutables.dstInteractionHash) {
+            revert InvalidInteraction();
+        }
+        _;
     }
 }

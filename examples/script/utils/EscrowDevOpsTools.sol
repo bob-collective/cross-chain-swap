@@ -20,7 +20,7 @@ library EscrowDevOpsTools {
 
     bytes32 public constant ORDER_FILLED_EVENT_SIGNATURE = 0xfec331350fce78ba658e082a71da20ac9f8d798a99b3c79681c8440cbfe77e07;
     bytes32 public constant TRANSFER_EVENT_SIGNATURE = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
-    bytes32 public constant SRC_ESCROW_CREATED_EVENT_SIGNATURE = 0x0e534c62f0afd2fa0f0fa71198e8aa2d549f24daf2bb47de0d5486c7ce9288ca;
+    bytes32 public constant SRC_ESCROW_CREATED_EVENT_SIGNATURE = 0x3824d57a8f8185ee72723157a0eb460cd3946b44eea33141f0b08901e3a67cf5;
     bytes32 public constant DST_ESCROW_CREATED_EVENT_SIGNATURE = 0xc30e111dcc74fddc2c3a4d98ffb97adec4485c0a687946bf5b22c2a99c7ff96d;
 
     function getResolver(Config memory config) internal view returns(address) {
